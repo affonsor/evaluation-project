@@ -141,6 +141,42 @@ public class Sale : BaseEntity
     }
 
     /// <summary>
+    /// Replaces the sale header and the whole item set in a single operation, recalculating the
+    /// total. Adding the same product more than once accumulates into a single line, so the
+    /// discount tier and the 20 identical-items limit apply to the combined quantity.
+    /// Raises <see cref="SaleModifiedEvent"/>.
+    /// </summary>
+    /// <exception cref="DomainException">Thrown when the sale is cancelled or a quantity violates the policy.</exception>
+    public void Update(
+        string saleNumber,
+        DateTime saleDate,
+        Customer customer,
+        Branch branch,
+        IEnumerable<(Product Product, int Quantity, decimal UnitPrice)> items)
+    {
+        EnsureActive();
+
+        SaleNumber = saleNumber;
+        SaleDate = saleDate;
+        Customer = customer ?? throw new ArgumentNullException(nameof(customer));
+        Branch = branch ?? throw new ArgumentNullException(nameof(branch));
+
+        _items.Clear();
+        foreach (var (product, quantity, unitPrice) in items)
+        {
+            var existing = _items.FirstOrDefault(i => i.Product.Id == product.Id);
+            if (existing is not null)
+                existing.IncreaseQuantity(quantity);
+            else
+                _items.Add(new SaleItem(Id, product, quantity, unitPrice));
+        }
+
+        RecalculateTotal();
+        Touch();
+        Raise(new SaleModifiedEvent(this));
+    }
+
+    /// <summary>
     /// Validates the sale (and its items) using <see cref="SaleValidator"/>.
     /// </summary>
     public ValidationResultDetail Validate()
