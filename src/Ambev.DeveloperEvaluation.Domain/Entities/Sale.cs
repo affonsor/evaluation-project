@@ -43,13 +43,13 @@ public class Sale : BaseEntity
     /// <summary>The product lines that make up this sale.</summary>
     public IReadOnlyCollection<SaleItem> Items => _items.AsReadOnly();
 
-    private readonly List<object> _domainEvents = new();
+    private readonly List<IDomainEvent> _domainEvents = new();
 
     /// <summary>
     /// Domain events raised by this aggregate. Raising events is the aggregate's responsibility;
     /// publishing them is the infrastructure's concern.
     /// </summary>
-    public IReadOnlyCollection<object> DomainEvents => _domainEvents.AsReadOnly();
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     /// <summary>Clears the accumulated domain events (typically after they have been dispatched).</summary>
     public void ClearDomainEvents() => _domainEvents.Clear();
@@ -201,5 +201,5 @@ public class Sale : BaseEntity
 
     private void Touch() => UpdatedAt = DateTime.UtcNow;
 
-    private void Raise(object domainEvent) => _domainEvents.Add(domainEvent);
+    private void Raise(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
 }

@@ -1,3 +1,4 @@
+using Ambev.DeveloperEvaluation.Application.Events;
 using Ambev.DeveloperEvaluation.Application.Sales.Common;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
@@ -13,11 +14,13 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, SaleResult>
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly IDomainEventDispatcher _eventDispatcher;
 
-    public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+    public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper, IDomainEventDispatcher eventDispatcher)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
+        _eventDispatcher = eventDispatcher;
     }
 
     public async Task<SaleResult> Handle(CreateSaleCommand command, CancellationToken cancellationToken)
@@ -38,6 +41,10 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, SaleResult>
             sale.AddItem(new Product(item.ProductId, item.ProductName), item.Quantity, item.UnitPrice);
 
         var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
+
+        await _eventDispatcher.DispatchAsync(sale.DomainEvents, cancellationToken);
+        sale.ClearDomainEvents();
+
         return _mapper.Map<SaleResult>(createdSale);
     }
 }
