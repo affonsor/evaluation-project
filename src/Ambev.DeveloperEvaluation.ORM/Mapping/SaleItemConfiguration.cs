@@ -15,7 +15,10 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
         builder.ToTable("SaleItems");
 
         builder.HasKey(i => i.Id);
-        builder.Property(i => i.Id).HasColumnType("uuid");
+        // Ids are assigned by the domain (SaleItem ctor), so EF must not treat a client-set Guid as
+        // an already-persisted row. Without this, adding a new item to a tracked aggregate on update
+        // is misclassified as Modified (UPDATE affecting 0 rows) instead of Added (INSERT).
+        builder.Property(i => i.Id).HasColumnType("uuid").ValueGeneratedNever();
 
         builder.Property(i => i.SaleId).IsRequired();
         builder.Property(i => i.Quantity).IsRequired();
