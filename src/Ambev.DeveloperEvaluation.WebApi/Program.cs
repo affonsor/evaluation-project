@@ -72,7 +72,9 @@ public class Program
 
             app.Run();
         }
-        catch (Exception ex)
+        // The name-based filter lets the hosting sentinel that WebApplicationFactory throws to
+        // capture the host propagate, so integration tests can boot the app.
+        catch (Exception ex) when (ex.GetType().Name is not ("StopTheHostException" or "HostAbortedException"))
         {
             Log.Fatal(ex, "Application terminated unexpectedly");
         }
