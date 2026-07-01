@@ -59,12 +59,7 @@ public class SalesController : BaseController
     {
         var result = await _mediator.Send(new GetSaleQuery(id), cancellationToken);
 
-        return base.Ok(new ApiResponseWithData<SaleResult>
-        {
-            Success = true,
-            Message = "Sale retrieved successfully",
-            Data = result
-        });
+        return Ok(result, "Sale retrieved successfully");
     }
 
     /// <summary>Lists sales with pagination, ordering and filtering.</summary>
@@ -76,14 +71,7 @@ public class SalesController : BaseController
         var query = _mapper.Map<ListSalesQuery>(request);
         PaginatedResult<SaleResult> result = await _mediator.Send(query, cancellationToken);
 
-        return base.Ok(new PaginatedResponse<SaleResult>
-        {
-            Success = true,
-            Data = result.Items,
-            CurrentPage = result.CurrentPage,
-            TotalPages = result.TotalPages,
-            TotalCount = result.TotalItems
-        });
+        return OkPaginated(result.Items, result.CurrentPage, result.TotalPages, result.TotalItems);
     }
 
     /// <summary>Updates an existing sale (replaces header and items).</summary>
@@ -97,12 +85,7 @@ public class SalesController : BaseController
         command.Id = id;
         var result = await _mediator.Send(command, cancellationToken);
 
-        return base.Ok(new ApiResponseWithData<SaleResult>
-        {
-            Success = true,
-            Message = "Sale updated successfully",
-            Data = result
-        });
+        return Ok(result, "Sale updated successfully");
     }
 
     /// <summary>Permanently deletes a sale.</summary>
@@ -113,11 +96,7 @@ public class SalesController : BaseController
     {
         await _mediator.Send(new DeleteSaleCommand(id), cancellationToken);
 
-        return base.Ok(new ApiResponse
-        {
-            Success = true,
-            Message = "Sale deleted successfully"
-        });
+        return OkResponse("Sale deleted successfully");
     }
 
     /// <summary>Cancels a whole sale (and all of its items).</summary>
@@ -128,12 +107,7 @@ public class SalesController : BaseController
     {
         var result = await _mediator.Send(new CancelSaleCommand(id), cancellationToken);
 
-        return base.Ok(new ApiResponseWithData<SaleResult>
-        {
-            Success = true,
-            Message = "Sale cancelled successfully",
-            Data = result
-        });
+        return Ok(result, "Sale cancelled successfully");
     }
 
     /// <summary>Cancels a single item within a sale.</summary>
@@ -145,11 +119,6 @@ public class SalesController : BaseController
     {
         var result = await _mediator.Send(new CancelItemCommand(saleId, itemId), cancellationToken);
 
-        return base.Ok(new ApiResponseWithData<SaleResult>
-        {
-            Success = true,
-            Message = "Sale item cancelled successfully",
-            Data = result
-        });
+        return Ok(result, "Sale item cancelled successfully");
     }
 }
